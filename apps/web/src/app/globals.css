@@ -1,0 +1,25 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    /* Every Tailwind text and spacing utility is rem-based, so bumping the
+       root size (16px to 18px) scales the whole app's type and spacing up
+       together — the simplest way to make a dense, small-text UI read as
+       a comfortable, modern app instead of a compact admin tool. */
+    font-size: 112.5%;
+    -webkit-text-size-adjust: 100%;
+  }
+  body {
+    @apply bg-cream-50 text-charcoal font-body antialiased;
+    line-height: 1.55;
+  }
+  h1,
+  h2,
+  h3 {
+    @apply font-display;
+    line-height: 1.15;
+    letter-spacing: -0.01em;
+  }
+}

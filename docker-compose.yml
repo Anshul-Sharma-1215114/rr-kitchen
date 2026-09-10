@@ -1,0 +1,16 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: rr-kitchen-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: rrkitchen
+      POSTGRES_PASSWORD: rrkitchen
+      POSTGRES_DB: rrkitchen
+    ports:
+      - "5432:5432"
+    volumes:
+      - rr_kitchen_pgdata:/var/lib/postgresql/data
+
+volumes:
+  rr_kitchen_pgdata:
