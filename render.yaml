@@ -18,7 +18,13 @@ services:
     name: rr-kitchen-api
     runtime: node
     plan: free
-    buildCommand: npm install && npm run prisma:generate -w apps/server && npm run build:shared && npm run build -w apps/server
+    # --include=dev: NODE_ENV=production is set below for the running
+    # server (needed for secure cookies/HSTS — see app.ts), but npm reads
+    # that same env var during install too and silently skips
+    # devDependencies by default when it's set to "production" — which
+    # would drop typescript, the @types/* packages, and prisma itself
+    # right when the build needs them.
+    buildCommand: npm install --include=dev && npm run prisma:generate -w apps/server && npm run build:shared && npm run build -w apps/server
     startCommand: npm run prisma:migrate:deploy -w apps/server && node apps/server/dist/index.js
     healthCheckPath: /health
     envVars:
