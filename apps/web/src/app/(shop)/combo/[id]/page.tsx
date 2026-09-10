@@ -9,6 +9,7 @@ import { formatInr } from "@/lib/format";
 import { useCart, type CartSwap } from "@/lib/cart-context";
 import { VegBadge } from "@/components/veg-badge";
 import { DetailPageSkeleton } from "@/components/skeleton";
+import { resolveImageUrl } from "@/lib/api-url";
 
 interface ComboDetailResponse {
   combo: Combo;
@@ -37,6 +38,7 @@ export default function ComboDetailPage() {
   if (!data) return <DetailPageSkeleton />;
 
   const { combo, substitutionOptions } = data;
+  const imageUrl = resolveImageUrl(combo.imageUrl);
 
   function handleAddToCart() {
     const swaps: CartSwap[] = [];
@@ -71,9 +73,9 @@ export default function ComboDetailPage() {
   return (
     <main className="mx-auto max-w-2xl px-4 py-6">
       <div className="relative aspect-video overflow-hidden rounded-2xl bg-leaf-50">
-        {combo.imageUrl ? (
+        {imageUrl ? (
           <Image
-            src={combo.imageUrl}
+            src={imageUrl}
             alt={combo.name}
             fill
             sizes="(max-width: 672px) 100vw, 672px"

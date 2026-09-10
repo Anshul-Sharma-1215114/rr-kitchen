@@ -5,6 +5,7 @@ import Image from "next/image";
 import type { MenuItem } from "@/lib/types";
 import { formatInr } from "@/lib/format";
 import { useCart } from "@/lib/cart-context";
+import { resolveImageUrl } from "@/lib/api-url";
 import { VegBadge } from "./veg-badge";
 import { QuantityStepper } from "./quantity-stepper";
 
@@ -12,13 +13,14 @@ export function ItemCard({ item }: { item: MenuItem }) {
   const { lines, addLine, updateQuantity } = useCart();
   const cartLine = lines.find((l) => l.kind === "item" && l.refId === item.id);
   const quantity = cartLine?.quantity ?? 0;
+  const imageUrl = resolveImageUrl(item.imageUrl);
 
   return (
     <div className="flex flex-col overflow-hidden rounded-2xl border border-spice-100 bg-white shadow-sm transition-shadow hover:shadow-md">
       <Link href={`/menu/${item.id}`} className="relative block aspect-[4/3] bg-spice-50">
-        {item.imageUrl ? (
+        {imageUrl ? (
           <Image
-            src={item.imageUrl}
+            src={imageUrl}
             alt={item.name}
             fill
             sizes="(max-width: 640px) 50vw, 33vw"

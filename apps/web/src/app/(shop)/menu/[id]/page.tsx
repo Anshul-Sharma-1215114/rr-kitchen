@@ -12,6 +12,7 @@ import { QuantityStepper } from "@/components/quantity-stepper";
 import { useAuth } from "@/lib/auth-context";
 import { getSocket } from "@/lib/socket";
 import { DetailPageSkeleton } from "@/components/skeleton";
+import { resolveImageUrl } from "@/lib/api-url";
 
 export default function MenuItemDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -67,13 +68,14 @@ export default function MenuItemDetailPage() {
 
   const cartLine = lines.find((l) => l.kind === "item" && l.refId === item.id);
   const quantity = cartLine?.quantity ?? 0;
+  const imageUrl = resolveImageUrl(item.imageUrl);
 
   return (
     <main className="mx-auto max-w-2xl px-4 py-6">
       <div className="relative aspect-video overflow-hidden rounded-2xl bg-spice-50">
-        {item.imageUrl ? (
+        {imageUrl ? (
           <Image
-            src={item.imageUrl}
+            src={imageUrl}
             alt={item.name}
             fill
             sizes="(max-width: 672px) 100vw, 672px"

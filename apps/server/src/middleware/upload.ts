@@ -3,11 +3,12 @@ import path from "path";
 import fs from "fs";
 import crypto from "crypto";
 
-// Written straight into apps/web/public/uploads so Next.js serves them as
-// static files at /uploads/<file> with zero extra wiring. Swap for
-// Cloudinary/S3 later by changing just this storage engine — everywhere else
-// in the schema only ever stores the resulting URL string.
-const uploadDir = path.resolve(__dirname, "../../../web/public/uploads");
+// Kept inside the server app itself (not apps/web/public) and served back
+// out via express.static in app.ts, so the web app and API can be deployed
+// to entirely separate hosts with no shared filesystem between them. Swap
+// for Cloudinary/S3 later by changing just this storage engine — everywhere
+// else in the schema only ever stores the resulting URL string.
+const uploadDir = path.resolve(__dirname, "../../uploads");
 fs.mkdirSync(uploadDir, { recursive: true });
 
 const storage = multer.diskStorage({

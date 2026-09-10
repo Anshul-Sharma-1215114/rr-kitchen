@@ -1,4 +1,5 @@
 import express from "express";
+import path from "path";
 import "express-async-errors";
 import helmet from "helmet";
 import cors from "cors";
@@ -52,6 +53,11 @@ app.use(express.json());
 app.use(cookieParser());
 
 app.get("/health", (_req, res) => res.json({ status: "ok" }));
+
+// Matches the upload destination in middleware/upload.ts — served from here
+// (not the web app's public/) so uploads work even when the web app and
+// this API are deployed to separate hosts.
+app.use("/uploads", express.static(path.resolve(__dirname, "../uploads")));
 
 app.use("/api/auth", authRoutes);
 app.use("/api", menuRoutes);

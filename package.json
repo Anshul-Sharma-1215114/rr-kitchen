@@ -13,6 +13,7 @@
     "build": "npm run build:shared && npm run build -w apps/server && npm run build -w apps/web",
     "prisma:generate": "npm run prisma:generate -w apps/server",
     "prisma:migrate": "npm run prisma:migrate -w apps/server",
+    "prisma:migrate:deploy": "npm run prisma:migrate:deploy -w apps/server",
     "prisma:seed": "npm run prisma:seed -w apps/server",
     "prisma:studio": "npm run prisma:studio -w apps/server"
   },

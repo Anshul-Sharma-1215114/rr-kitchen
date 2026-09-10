@@ -4,17 +4,19 @@ import Link from "next/link";
 import Image from "next/image";
 import type { Combo } from "@/lib/types";
 import { formatInr } from "@/lib/format";
+import { resolveImageUrl } from "@/lib/api-url";
 
 export function ComboCard({ combo }: { combo: Combo }) {
+  const imageUrl = resolveImageUrl(combo.imageUrl);
   return (
     <Link
       href={`/combo/${combo.id}`}
       className="flex flex-col overflow-hidden rounded-2xl border-2 border-leaf-200 bg-leaf-50 shadow-sm transition hover:border-leaf-400 hover:shadow-md"
     >
       <div className="relative aspect-[4/3] bg-leaf-100">
-        {combo.imageUrl ? (
+        {imageUrl ? (
           <Image
-            src={combo.imageUrl}
+            src={imageUrl}
             alt={combo.name}
             fill
             sizes="(max-width: 640px) 50vw, 33vw"

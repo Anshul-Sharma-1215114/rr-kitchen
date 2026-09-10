@@ -788,11 +788,16 @@ insecure otherwise:**
    `secure` in production, so login silently fails without HTTPS.
 6. **A real OTP provider** (see above) — without it, no customer can log
    in, full stop.
-7. **`apps/web/.env.local`'s `NEXT_PUBLIC_API_PORT`** only works because
-   the web app and API currently share a host — see `lib/api-url.ts`. If
-   the API ends up on a genuinely different domain in production (not
-   just a different port on the same host), that file's assumption breaks
-   and it needs an explicit `NEXT_PUBLIC_API_URL` override instead.
+7. ~~`apps/web/.env.local`'s `NEXT_PUBLIC_API_PORT` only works because the
+   web app and API share a host~~ — fixed: `lib/api-url.ts` now prefers an
+   explicit `NEXT_PUBLIC_API_URL` when set, falling back to the same-host
+   port-derivation trick only when it isn't (local/LAN dev). Set
+   `NEXT_PUBLIC_API_URL` on the web app's production deploy to the API's
+   real URL (e.g. `https://rr-kitchen-api.onrender.com`). Uploaded images
+   went through the same fix — they're served from the API's own
+   `/uploads` route now (`resolveImageUrl` in `lib/api-url.ts`), not the
+   web app's `public/` folder, since that only worked when both were the
+   same filesystem.
 
 **Should address soon after launch — works today, won't hold up at scale
 or under real operational load:**
@@ -804,9 +809,13 @@ or under real operational load:**
   are effectively N times looser than intended). Move to Redis before
   running more than one instance, or before this matters for real abuse
   resistance.
-- **Uploaded images live on local disk** — see the "Images" placeholder
-  note above. Same issue: doesn't survive redeploys, doesn't work
-  multi-instance.
+- **Uploaded images live on local disk** (`apps/server/uploads`, served via
+  `express.static`). Fine on a single always-on instance, but a redeploy on
+  a platform with an ephemeral filesystem (Render's free tier included)
+  wipes them, and it doesn't work multi-instance either. Move to S3/
+  Cloudinary/R2 before that matters — `middleware/upload.ts` is the only
+  file that needs to change (everywhere else just stores the resulting URL
+  string).
 - **No automated test suite.** Everything in this README's "Current
   status" history was verified by hand (curl scripts, then a headless
   Playwright browser once one was available) during development, not by
@@ -823,10 +832,9 @@ or under real operational load:**
 **Standard steps for the deploy itself:**
 
 ```bash
-npm run build          # builds packages/shared, apps/server, apps/web
-npm run prisma:migrate # or `prisma migrate deploy` in a non-interactive
-                        # CI/CD environment — applies pending migrations
-                        # without prompting
+npm run build              # builds packages/shared, apps/server, apps/web
+npm run prisma:migrate:deploy  # non-interactive — applies pending migrations
+                                # without prompting (unlike prisma:migrate)
 ```
 
 Run the server with a process manager (PM2, systemd, or the hosting
@@ -835,3 +843,27 @@ restarts automatically on a crash. `apps/server`'s `dist/index.js` is the
 production entry point after `npm run build`; `apps/web` is a standard
 Next.js production build (`next start`, or deploy to a platform that runs
 that for you).
+
+**This app's actual split (frontend on Vercel, API+DB on Render):**
+
+Vercel's serverless model can't run the Express+Socket.io process or host
+Postgres, so this only ever deploys `apps/web`. The API and database go to
+Render instead, which supports a persistent Node process.
+
+1. **API + database → Render.** `render.yaml` at the repo root is a Render
+   Blueprint — in the Render dashboard, New → Blueprint → point at this
+   repo, and it provisions a free Postgres instance plus a web service for
+   `apps/server` (build/start commands, health check, and `DATABASE_URL`/
+   `JWT_SECRET` are all wired up already). The one field it can't fill in
+   for you is `WEB_ORIGIN` — set it to the Vercel URL from step 2 and
+   redeploy.
+2. **Web app → Vercel.** Import the repo as a project with root directory
+   `apps/web`; Vercel auto-detects Next.js. Set `NEXT_PUBLIC_API_URL` to
+   the Render service's URL (e.g. `https://rr-kitchen-api.onrender.com`).
+3. Redeploy the Render service once you have the real Vercel URL for
+   `WEB_ORIGIN` (CORS + cookies check the exact origin, so this has to be
+   set correctly for login to work at all).
+4. Render's free web-service tier spins down after inactivity and its disk
+   is ephemeral — fine for a first deploy, not for real traffic. See the
+   "Should address soon" notes above (Redis for rate limiting, object
+   storage for uploads) before this is a permanent setup.
