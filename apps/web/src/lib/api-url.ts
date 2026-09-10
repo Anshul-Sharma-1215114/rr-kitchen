@@ -27,12 +27,15 @@ export function getApiUrl(): string {
   return `http://localhost:${API_PORT}`;
 }
 
-// Uploaded images (menu item/combo photos) are stored as API-relative paths
-// (e.g. "/uploads/abc.jpg") and served by the API itself, not the web app —
-// so rendering them needs the API origin prefixed on, same as any other API
-// call.
+// Only /uploads/* paths are actual admin-uploaded images, served by the API
+// itself (see middleware/upload.ts + app.ts's express.static("/uploads"))
+// — those need the API origin prefixed on, same as any other API call.
+// Everything else (e.g. "/seed-images/*", the bundled demo menu photos) is
+// a static asset shipped with the web app's own public/ folder and stays
+// root-relative, resolved against the web app's own origin as-is.
 export function resolveImageUrl(url: string | null): string | null {
   if (!url) return null;
   if (/^https?:\/\//.test(url)) return url;
-  return `${getApiUrl()}${url}`;
+  if (url.startsWith("/uploads/")) return `${getApiUrl()}${url}`;
+  return url;
 }
